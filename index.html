@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#FF6B6B">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Compass - Navigate Your Priorities</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F0F0F;
+            --bg-secondary: #1A1A1A;
+            --surface: #242424;
+            --foreground: #FFFFFF;
+            --foreground-secondary: #A0A0A0;
+            --border: #333333;
+            --primary: #FF6B6B;
+            --primary-hover: #FF8585;
+            --secondary: #4ECDC4;
+            --tertiary: #FFE66D;
+            --quaternary: #95E1D3;
+            --quadrant-do-first: #FF6B6B;
+            --quadrant-schedule: #FFE66D;
+            --quadrant-delegate: #4ECDC4;
+            --quadrant-eliminate: #95E1D3;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--foreground);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        h1, h2, h3 { font-family: 'Outfit', sans-serif; }
+        
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 100;
+            padding-top: env(safe-area-inset-top, 0);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .logo-icon svg { width: 20px; height: 20px; stroke: white; fill: none; }
+        
+        .logo-text {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: var(--foreground);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 16px;
+            height: 16px;
+            background: var(--primary);
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Main content */
+        .main {
+            position: fixed;
+            top: 64px;
+            bottom: 64px;
+            left: 0;
+            right: 0;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        
+        /* Navigation */
+        .nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            z-index: 100;
+            padding-bottom: env(safe-area-inset-bottom, 0);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: var(--foreground-secondary);
+            cursor: pointer;
+            font-size: 12px;
+            transition: color 0.2s;
+        }
+        
+        .nav-item.active { color: var(--primary); }
+        
+        /* Quadrants grid */
+        .quadrants-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            height: 100%;
+        }
+        
+        .quadrant {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .quadrant-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .quadrant-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .quadrant-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .quadrant-label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .quadrant-count {
+            font-size: 12px;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .quadrant-tasks {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        /* Task card */
+        .task-card {
+            background: var(--surface);
+            border-radius: 8px;
+            padding: 12px;
+            border-left: 3px solid var(--quadrant-do-first);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .task-title {
+            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .task-meta {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: var(--foreground-secondary);
+        }
+        
+        .task-tags {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .task-tag {
+            font-size: 10px;
+            padding: 2px 6px;
+            background: var(--bg);
+            border-radius: 4px;
+            color: var(--foreground-secondary);
+        }
+        
+        /* Add task button */
+        .fab {
+            position: fixed;
+            bottom: 80px;
+            right: 16px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(255,107,107,0.4);
+            z-index: 90;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        
+        .modal-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .modal {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 24px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            transform: scale(0.95);
+            transition: transform 0.2s;
+        }
+        
+        .modal-overlay.visible .modal {
+            transform: scale(1);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .close-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: var(--foreground-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Form */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+        
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--foreground);
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        .form-textarea { min-height: 100px; resize: vertical; }
+        
+        /* Slider */
+        .slider-container {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 24px 0;
+        }
+        
+        .slider-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--bg);
+            border: none;
+            color: var(--foreground-secondary);
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .slider-btn.active {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(255,107,107,0.3);
+        }
+        
+        /* Steps indicator */
+        .steps {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .step {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: none;
+            color: var(--foreground-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .step.completed { background: #22C55E; color: white; }
+        .step.active { background: var(--primary); color: white; }
+        
+        .step-line {
+            width: 24px;
+            height: 2px;
+            background: var(--border);
+        }
+        
+        .step-line.completed { background: #22C55E; }
+        
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--foreground);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+        
+        /* Notifications dropdown */
+        .notifications-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 300px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 8px;
+            display: none;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 150;
+        }
+        
+        .notifications-dropdown.visible { display: block; }
+        
+        .notification-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .notification-item:hover { background: var(--bg); }
+        
+        .notification-item.unread { background: var(--bg-secondary); }
+        
+        .notification-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .notification-content { flex: 1; }
+        
+        .notification-title {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .notification-message {
+            font-size: 12px;
+            color: var(--foreground-secondary);
+        }
+        
+        .notification-time {
+            font-size: 11px;
+            color: var(--foreground-secondary);
+        }
+        
+        /* Profile dropdown */
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 160px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 8px;
+            display: none;
+            z-index: 150;
+        }
+        
+        .profile-dropdown.visible { display: block; }
+        
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .dropdown-item:hover { background: var(--bg); }
+        
+        /* Page transitions */
+        .page {
+            display: none;
+            height: 100%;
+            animation: fadeIn 0.2s;
+        }
+        
+        .page.visible { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Calendar */
+        .calendar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+        
+        .calendar-day-header {
+            text-align: center;
+            font-size: 12px;
+            color: var(--foreground-secondary);
+            padding: 8px;
+        }
+        
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 4px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .calendar-day:hover { background: var(--bg-secondary); }
+        
+        .calendar-day.today {
+            box-shadow: inset 0 0 0 2px var(--primary);
+        }
+        
+        .calendar-task {
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            margin-top: 2px;
+            width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* Login page */
+        .login-page {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .login-form {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 24px;
+        }
+        
+        .login-info {
+            display: none;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 48px;
+        }
+        
+        @media (min-width: 768px) {
+            .login-form { flex: 1; }
+            .login-info { display: flex; flex-direction: column; justify-content: center; }
+        }
+        
+        .login-title { font-size: 32px; margin-bottom: 16px; }
+        
+        .login-description { font-size: 18px; opacity: 0.8; }
+        
+        .quadrant-demo {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 32px;
+        }
+        
+        .quadrant-demo-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .quadrant-demo-dot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+        }
+        
+        /* Settings page */
+        .settings-section {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .settings-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .toggle {
+            width: 44px;
+            height: 24px;
+            background: var(--border);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .toggle.active { background: var(--primary); }
+        
+        .toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        
+        .toggle.active::after { transform: translateX(20px); }
+        
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .theme-option {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .theme-option.active { border-color: var(--primary); }
+        
+        .theme-preview {
+            height: 40px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        
+        /* Command Palette */
+        .command-palette-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 80px;
+            z-index: 300;
+        }
+        
+        .command-palette-overlay.visible { display: flex; }
+        
+        .command-palette {
+            width: 100%;
+            max-width: 500px;
+            background: var(--surface);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .command-input {
+            width: 100%;
+            padding: 16px;
+            background: transparent;
+            border: none;
+            color: var(--foreground);
+            font-size: 16px;
+            outline: none;
+        }
+        
+        .command-results {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .command-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+        }
+        
+        .command-item:hover { background: var(--bg-secondary); }
+        
+        .command-item.selected { background: var(--primary); color: white; }
+        
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        /* History page */
+        .playback-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            padding: 16px;
+            background: var(--surface);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .speed-btns {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .speed-btn {
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: var(--bg);
+            border: none;
+            color: var(--foreground-secondary);
+            cursor: pointer;
+        }
+        
+        .speed-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .timeline {
+            height: 8px;
+            background: var(--bg);
+            border-radius: 4px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+        
+        .timeline-progress {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .stat-card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        
+        .stat-count {
+            font-size: 32px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+    
+    <script>
+        // Compass PWA - Standalone Demo
+        const mockTasks = [
+            { id: '1', title: 'Submit quarterly report', description: 'Complete Q1 financial report', importance: 5, urgency: 5, dueDate: new Date().toISOString(), tags: ['work', 'urgent'], state: 'new', createdAt: new Date().toISOString() },
+            { id: '2', title: 'Client presentation', importance: 5, urgency: 4, dueDate: new Date(Date.now()+86400000).toISOString(), tags: ['work'], state: 'in-progress', createdAt: new Date().toISOString() },
+            { id: '3', title: 'Fix critical bug', importance: 5, urgency: 5, tags: ['bug'], state: 'new', createdAt: new Date().toISOString() },
+            { id: '4', title: 'Plan team strategy', importance: 4, urgency: 2, dueDate: new Date(Date.now()+172800000).toISOString(), tags: ['planning'], state: 'new', createdAt: new Date().toISOString() },
+            { id: '5', title: 'Learn new framework', importance: 3, urgency: 1, tags: ['learning'], state: 'in-progress', createdAt: new Date().toISOString() },
+            { id: '6', title: 'Update resume', importance: 3, urgency: 1, tags: ['career'], state: 'new', createdAt: new Date().toISOString() },
+            { id: '7', title: 'Email follow-ups', importance: 1, urgency: 4, tags: ['admin'], state: 'new', createdAt: new Date().toISOString() },
+            { id: '8', title: 'Team meeting notes', importance: 2, urgency: 3, dueDate: new Date().toISOString(), tags: ['admin'], state: 'completed', createdAt: new Date().toISOString() },
+            { id: '9', title: 'Clear inbox', importance: 1, urgency: 1, tags: ['admin'], state: 'new', createdAt: new Date().toISOString() },
+            { id: '10', title: 'Organize files', importance: 0, urgency: 0, tags: ['admin'], state: 'new', createdAt: new Date().toISOString() },
+            { id: '11', title: 'Browse news', importance: 0, urgency: 1, tags: ['leisure'], state: 'new', createdAt: new Date().toISOString() },
+        ];
+        
+        const mockNotifications = [
+            { id: 'n1', type: 'push', title: 'Quarterly Report Due', message: 'Report due in 1 hour', read: false, taskId: '1', time: '15 min ago' },
+            { id: 'n2', type: 'both', title: 'Client Presentation', message: 'Scheduled for tomorrow 2PM', read: false, taskId: '2', time: '2 hours ago' },
+            { id: 'n3', type: 'email', title: 'Meeting Completed', message: 'Notes distributed', read: true, taskId: '8', time: '3 hours ago' },
+            { id: 'n4', type: 'push', title: 'Critical Bug', message: 'Users cannot login', read: true, taskId: '3', time: '6 hours ago' },
+        ];
+        
+        let currentPage = 'tasks';
+        let taskData = [...mockTasks];
+        let createTaskStep = 1;
+        let showNotifications = false;
+        let showProfile = false;
+        let createTaskData = { title: '', description: '', importance: 2, urgency: 2, dueDate: '', repeat: 'none', reminder: 'none', tags: [], isAllDay: false };
+        
+        function getQuadrant(task) {
+            if (task.importance >= 3 && task.urgency >= 3) return 'do-first';
+            if (task.importance >= 3 && task.urgency < 3) return 'schedule';
+            if (task.importance < 3 && task.urgency >= 3) return 'delegate';
+            return 'eliminate';
+        }
+        
+        function getQuadrantColor(q) {
+            return { 'do-first': '#FF6B6B', 'schedule': '#FFE66D', 'delegate': '#4ECDC4', 'eliminate': '#95E1D3' }[q];
+        }
+        
+        function getQuadrantLabel(q) {
+            return { 'do-first': 'Do First', 'schedule': 'Schedule', 'delegate': 'Delegate', 'eliminate': 'Eliminate' }[q];
+        }
+        
+        function getTasksForQuadrant(quadrant) {
+            return taskData.filter(t => getQuadrant(t) === quadrant);
+        }
+        
+        function renderHeader() {
+            const hasUnread = mockNotifications.some(n => !n.read);
+            return `
+                <header class="header">
+                    <div class="logo">
+                        <div class="logo-icon">
+                            <svg viewBox="0 0 24 24"><path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" stroke-width="2"/><path d="M12 22V12"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+                        </div>
+                        <span class="logo-text">Compass</span>
+                    </div>
+                    <div class="header-actions">
+                        <button class="icon-btn" onclick="toggleNotifications()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                            ${hasUnread ? '<span class="badge">' + mockNotifications.filter(n => !n.read).length + '</span>' : ''}
+                        </button>
+                        <div class="notifications-dropdown ${showNotifications ? 'visible' : ''}" id="notifications-dropdown">
+                            ${mockNotifications.map(n => `
+                                <div class="notification-item ${n.read ? '' : 'unread'}" onclick="highlightTask('${n.taskId}')">
+                                    <div class="notification-icon" style="background: ${n.type === 'push' ? 'rgba(255,107,107,0.2)' : n.type === 'email' ? 'rgba(78,205,196,0.2)' : 'rgba(34,197,94,0.2)'}">${n.type === 'push' ? '🔔' : n.type === 'email' ? '📧' : '✅'}</div>
+                                    <div class="notification-content">
+                                        <div class="notification-title">${n.title}</div>
+                                        <div class="notification-message">${n.message}</div>
+                                        <div class="notification-time">${n.time}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button class="icon-btn" onclick="toggleProfile()">
+                            <div style="width:32px;height:32px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            </div>
+                        </button>
+                        <div class="profile-dropdown ${showProfile ? 'visible' : ''}">
+                            <div class="dropdown-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Settings</div>
+                            <div class="dropdown-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout</div>
+                        </div>
+                    </div>
+                </header>
+            `;
+        }
+        
+        function renderNav() {
+            return `
+                <nav class="nav">
+                    <button class="nav-item ${currentPage === 'tasks' ? 'active' : ''}" onclick="setPage('tasks')">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                        <span>Tasks</span>
+                    </button>
+                    <button class="nav-item ${currentPage === 'schedule' ? 'active' : ''}" onclick="setPage('schedule')">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                        <span>Schedule</span>
+                    </button>
+                    <button class="nav-item ${currentPage === 'history' ? 'active' : ''}" onclick="setPage('history')">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <span>History</span>
+                    </button>
+                    <button class="nav-item ${currentPage === 'settings' ? 'active' : ''}" onclick="setPage('settings')">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        <span>Settings</span>
+                    </button>
+                </nav>
+            `;
+        }
+        
+        function renderTasksPage() {
+            const quadrants = ['do-first', 'schedule', 'delegate', 'eliminate'];
+            return `
+                <main class="main">
+                    <div class="quadrants-grid">
+                        ${quadrants.map(q => {
+                            const tasks = getTasksForQuadrant(q);
+                            const color = getQuadrantColor(q);
+                            return `
+                                <div class="quadrant">
+                                    <div class="quadrant-header">
+                                        <div class="quadrant-title">
+                                            <div class="quadrant-dot" style="background:${color}"></div>
+                                            <span class="quadrant-label">${getQuadrantLabel(q)}</span>
+                                            <span class="quadrant-count" style="background:${color}20;color:${color}">${tasks.length}</span>
+                                        </div>
+                                        <button class="icon-btn" onclick="openCreateTask('${q}')" style="width:28px;height:28px;">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="quadrant-tasks">
+                                        ${tasks.map(t => `
+                                            <div class="task-card" id="task-${t.id}" style="border-left-color:${color}">
+                                                <div class="task-title">${t.title}</div>
+                                                ${t.dueDate ? `<div class="task-meta">📅 ${new Date(t.dueDate).toLocaleDateString()}</div>` : ''}
+                                                ${t.tags.length > 0 ? `<div class="task-tags">${t.tags.map(tag => `<span class="task-tag">${tag}</span>`).join('')}</div>` : ''}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                    <button class="fab" onclick="openCreateTask()">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </button>
+                </main>
+            `;
+        }
+        
+        function renderSchedulePage() {
+            const today = new Date();
+            const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).getDay();
+            
+            return `
+                <main class="main">
+                    <div class="calendar-header">
+                        <div class="calendar-nav">
+                            <button class="icon-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg></button>
+                            <h2>${today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</h2>
+                            <button class="icon-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></button>
+                        </div>
+                    </div>
+                    <div class="calendar-grid">
+                        ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => `<div class="calendar-day-header">${d}</div>`).join('')}
+                        ${Array(firstDay).fill('<div></div>').join('')}
+                        ${Array(daysInMonth).fill(0).map((_, i) => {
+                            const day = i + 1;
+                            const date = new Date(today.getFullYear(), today.getMonth(), day);
+                            const tasks = taskData.filter(t => t.dueDate && new Date(t.dueDate).toDateString() === date.toDateString());
+                            const isToday = date.toDateString() === today.toDateString();
+                            return `
+                                <div class="calendar-day ${isToday ? 'today' : ''}">
+                                    <div>${day}</div>
+                                    ${tasks.slice(0,2).map(t => `<div class="calendar-task" style="background:${getQuadrantColor(getQuadrant(t))}30;color:${getQuadrantColor(getQuadrant(t))}">${t.title}</div>`).join('')}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </main>
+            `;
+        }
+        
+        function renderHistoryPage() {
+            const completed = taskData.filter(t => t.state === 'completed').length;
+            const total = taskData.length;
+            const percentage = Math.round((completed / total) * 100);
+            const QuadrantsStats = [
+                { name: 'Do First', color: '#FF6B6B', count: taskData.filter(t => getQuadrant(t) === 'do-first' && t.state === 'completed').length },
+                { name: 'Schedule', color: '#FFE66D', count: taskData.filter(t => getQuadrant(t) === 'schedule' && t.state === 'completed').length },
+                { name: 'Delegate', color: '#4ECDC4', count: taskData.filter(t => getQuadrant(t) === 'delegate' && t.state === 'completed').length },
+                { name: 'Eliminate', color: '#95E1D3', count: taskData.filter(t => getQuadrant(t) === 'eliminate' && t.state === 'completed').length },
+            ];
+            
+            return `
+                <main class="main">
+                    <div class="playback-controls">
+                        <button class="icon-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg></button>
+                        <button class="icon-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg></button>
+                        <button class="btn btn-primary" onclick="playTimeline()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                            Play
+                        </button>
+                        <div class="speed-btns">
+                            ${[0.5,1,2,4].map(s => `<button class="speed-btn ${s===1?'active':''}">${s}x</button>`).join('')}
+                        </div>
+                    </div>
+                    <div class="timeline"><div class="timeline-progress" style="width:${percentage}%"></div></div>
+                    <div class="stats-grid">
+                        ${QuadrantsStats.map(q => `
+                            <div class="stat-card">
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                    <div style="width:12px;height:12px;border-radius:50%;background:${q.color}"></div>
+                                    <span>${q.name}</span>
+                                </div>
+                                <div class="stat-count">${q.count}</div>
+                                <div style="font-size:12px;color:var(--foreground-secondary)">tasks completed</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </main>
+            `;
+        }
+        
+        function renderSettingsPage() {
+            return `
+                <main class="main">
+                    <div class="settings-section">
+                        <div class="settings-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            Account
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-input" value="Demo User">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-input" value="a@x.nl">
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <div class="settings-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                            Notifications
+                        </div>
+                        <div class="settings-row">
+                            <span>Push Notifications</span>
+                            <div class="toggle active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="settings-row">
+                            <span>Email Notifications</span>
+                            <div class="toggle active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <div class="settings-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                            Appearance
+                        </div>
+                        <div class="theme-grid">
+                            <div class="theme-option active"><div class="theme-preview" style="background:#0F0F0F"></div>Dark</div>
+                            <div class="theme-option"><div class="theme-preview" style="background:#FAFAFA"></div>Light</div>
+                            <div class="theme-option"><div class="theme-preview" style="background:#1E3D2C"></div>Forrest</div>
+                            <div class="theme-option"><div class="theme-preview" style="background:#143857"></div>Sea</div>
+                            <div class="theme-option"><div class="theme-preview" style="background:#3D2317"></div>Sunset</div>
+                        </div>
+                    </div>
+                    <div class="settings-section">
+                        <div class="settings-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            Import / Export
+                        </div>
+                        <div style="display:flex;gap:12px;">
+                            <button class="btn btn-outline" style="flex:1">Import JSON</button>
+                            <button class="btn btn-outline" style="flex:1">Export JSON</button>
+                        </div>
+                    </div>
+                </main>
+            `;
+        }
+        
+        function renderCreateTaskModal() {
+            return `
+                <div class="modal-overlay visible">
+                    <div class="modal">
+                        <div class="modal-header">
+                            <h3 class="modal-title">Create New Task</h3>
+                            <button class="close-btn" onclick="closeCreateTask()">✕</button>
+                        </div>
+                        <div class="steps">
+                            ${[1,2,3,4,5].map((step, i) => `
+                                ${i > 0 ? `<div class="step-line ${step <= createTaskStep ? 'completed' : ''}"></div>` : ''}
+                                <button class="step ${step === createTaskStep ? 'active' : step < createTaskStep ? 'completed' : ''}" onclick="setCreateStep(${step})">${step < createTaskStep ? '✓' : step}</button>
+                            `).join('')}
+                        </div>
+                        <div style="text-align:center;margin-bottom:16px;display:flex;justify-content:center;align-items:center;gap:8px;">
+                            <div style="width:12px;height:12px;border-radius:50%;background:${getQuadrantColor(getQuadrant(createTaskData))}"></div>
+                            <span style="font-weight:500;">${getQuadrantLabel(getQuadrant(createTaskData))}</span>
+                        </div>
+                        ${createTaskStep === 1 ? `
+                            <div class="form-group">
+                                <label class="form-label">Task Title *</label>
+                                <input type="text" class="form-input" id="task-title" value="${createTaskData.title}" placeholder="What needs to be done?" onchange="createTaskData.title = this.value">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Description (optional)</label>
+                                <textarea class="form-textarea" id="task-desc" placeholder="Add more details..." onchange="createTaskData.description = this.value">${createTaskData.description || ''}</textarea>
+                            </div>
+                        ` : ''}
+                        ${createTaskStep === 2 ? `
+                            <div style="text-align:center;margin-bottom:16px;">
+                                <h3>How important is this task?</h3>
+                                <p style="color:var(--foreground-secondary);font-size:14px;">Does this align with your long-term goals?</p>
+                            </div>
+                            <div class="slider-container">
+                                ${[0,1,2,3,4,5].map(v => `
+                                    <button class="slider-btn ${createTaskData.importance === v ? 'active' : ''}" onclick="createTaskData.importance=${v};render()">${v}</button>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        ${createTaskStep === 3 ? `
+                            <div style="text-align:center;margin-bottom:16px;">
+                                <h3>How urgent is this task?</h3>
+                                <p style="color:var(--foreground-secondary);font-size:14px;">Does this require immediate attention?</p>
+                            </div>
+                            <div class="slider-container">
+                                ${[0,1,2,3,4,5].map(v => `
+                                    <button class="slider-btn ${createTaskData.urgency === v ? 'active' : ''}" onclick="createTaskData.urgency=${v};render()">${v}</button>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        ${createTaskStep === 4 ? `
+                            <div class="form-group">
+                                <label class="form-label">Due Date</label>
+                                <input type="date" class="form-input" onchange="createTaskData.dueDate = this.value">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Repeat</label>
+                                <select class="form-select" onchange="createTaskData.repeat = this.value">
+                                    <option value="none">No repeat</option>
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Remind</label>
+                                <select class="form-select" onchange="createTaskData.reminder = this.value">
+                                    <option value="none">No reminder</option>
+                                    <option value="at_due">At due date</option>
+                                    <option value="30min">30 minutes before</option>
+                                    <option value="1hour">1 hour before</option>
+                                    <option value="1day">1 day before</option>
+                                </select>
+                            </div>
+                        ` : ''}
+                        ${createTaskStep === 5 ? `
+                            <div style="text-align:center;padding:24px;">
+                                <h3>Move to Important & Urgent</h3>
+                                <p style="color:var(--foreground-secondary);font-size:14px;margin-bottom:16px;">Automatically move to Do First when:</p>
+                                <select class="form-select" style="margin-bottom:16px;">
+                                    <option value="none">Manual</option>
+                                    <option value="task">After task completion</option>
+                                    <option value="time">After time period</option>
+                                </select>
+                            </div>
+                        ` : ''}
+                        <div class="btn-group">
+                            <button class="btn btn-outline" onclick="setCreateStep(${createTaskStep - 1})" ${createTaskStep === 1 ? 'disabled style="opacity:0.5"' : ''}>← Back</button>
+                            ${createTaskStep < 5 ? `
+                                <button class="btn btn-primary" onclick="setCreateStep(${createTaskStep + 1})">Next →</button>
+                            ` : `
+                                <button class="btn btn-primary" onclick="saveTask()">Create Task ✓</button>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function renderLoginPage() {
+            return `
+                <div class="login-page">
+                    <div class="login-form">
+                        <div class="logo" style="margin-bottom:32px;">
+                            <div class="logo-icon">
+                                <svg viewBox="0 0 24 24"><path d="M12 2L2 7V17L12 22L22 17V7L12 2Z" stroke-width="2"/><path d="M12 22V12"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+                            </div>
+                            <span class="logo-text">Compass</span>
+                        </div>
+                        <h1 style="font-size:28px;margin-bottom:8px;">Welcome back</h1>
+                        <p style="color:var(--foreground-secondary);margin-bottom:32px;">Sign in to navigate your priorities</p>
+                        <div class="form-group">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-input" value="a@x.nl" placeholder="you@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-input" value="secret123" placeholder="••••••••">
+                        </div>
+                        <button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="login()">Sign In →</button>
+                        <div style="display:flex;gap:12px;margin-top:24px;">
+                            <button class="btn btn-outline" style="flex:1;">Google</button>
+                            <button class="btn btn-outline" style="flex:1;">Apple</button>
+                        </div>
+                    </div>
+                    <div class="login-info">
+                        <h1 class="login-title">Navigate Your Priorities</h1>
+                        <p class="login-description">Compass helps you understand the difference between what's important and what's urgent using the Eisenhower Matrix.</p>
+                        <div class="quadrant-demo">
+                            <div class="quadrant-demo-item"><div class="quadrant-demo-dot" style="background:#FF6B6B">1</div><div><strong>Do First</strong><br>Important & Urgent</div></div>
+                            <div class="quadrant-demo-item"><div class="quadrant-demo-dot" style="background:#FFE66D;color:#000">2</div><div><strong>Schedule</strong><br>Important, Not Urgent</div></div>
+                            <div class="quadrant-demo-item"><div class="quadrant-demo-dot" style="background:#4ECDC4">3</div><div><strong>Delegate</strong><br>Not Important, Urgent</div></div>
+                            <div class="quadrant-demo-item"><div class="quadrant-demo-dot" style="background:#95E1D3;color:#000">4</div><div><strong>Eliminate</strong><br>Not Important, Not Urgent</div></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // State functions
+        let isLoggedIn = false;
+        
+        function login() {
+            isLoggedIn = true;
+            render();
+        }
+        
+        function logout() {
+            isLoggedIn = false;
+            render();
+        }
+        
+        function setPage(page) {
+            currentPage = page;
+            showNotifications = false;
+            showProfile = false;
+            render();
+        }
+        
+        function toggleNotifications() {
+            showNotifications = !showNotifications;
+            showProfile = false;
+            render();
+        }
+        
+        function toggleProfile() {
+            showProfile = !showProfile;
+            showNotifications = false;
+            render();
+        }
+        
+        function setCreateStep(step) {
+            createTaskStep = step;
+            render();
+        }
+        
+        function openCreateTask(quadrant) {
+            createTaskStep = 1;
+            createTaskData = { title: '', description: '', importance: quadrant === 'do-first' ? 5 : quadrant === 'schedule' ? 4 : quadrant === 'delegate' ? 1 : 0, urgency: quadrant === 'do-first' || quadrant === 'delegate' ? 5 : quadrant === 'schedule' ? 1 : 0, dueDate: '', repeat: 'none', reminder: 'none', tags: [], isAllDay: false };
+            render();
+        }
+        
+        function closeCreateTask() {
+            setPage('tasks');
+        }
+        
+        function saveTask() {
+            const newTask = {
+                id: String(Date.now()),
+                title: createTaskData.title,
+                description: createTaskData.description,
+                importance: createTaskData.importance,
+                urgency: createTaskData.urgency,
+                dueDate: createTaskData.dueDate,
+                tags: createTaskData.tags,
+                state: 'new',
+                createdAt: new Date().toISOString()
+            };
+            taskData.push(newTask);
+            setPage('tasks');
+        }
+        
+        function highlightTask(taskId) {
+            showNotifications = false;
+            render();
+            // Could add highlight logic here
+        }
+        
+        function playTimeline() {
+            alert('Timeline playback would start here with animations showing task completions chronologically. Speed controls: 0.5x, 1x, 2x, 4x');
+        }
+        
+        function render() {
+            const app = document.getElementById('app');
+            
+            if (!isLoggedIn) {
+                app.innerHTML = renderLoginPage();
+                return;
+            }
+            
+            let pageContent = '';
+            switch(currentPage) {
+                case 'tasks':
+                    pageContent = renderTasksPage();
+                    if (createTaskStep > 0) pageContent += renderCreateTaskModal();
+                    break;
+                case 'schedule':
+                    pageContent = renderSchedulePage();
+                    break;
+                case 'history':
+                    pageContent = renderHistoryPage();
+                    break;
+                case 'settings':
+                    pageContent = renderSettingsPage();
+                    break;
+            }
+            
+            app.innerHTML = renderHeader() + pageContent + renderNav();
+            
+            // Add click outside handlers
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.header-actions')) {
+                    showNotifications = false;
+                    showProfile = false;
+                }
+            });
+        }
+        
+        // Keyboard shortcut for command palette
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                alert('Command Palette: ⌘K - Quick navigation\n\nAvailable commands:\n- Create New Task\n- Go to Tasks/Calendar/History/Settings\n- Search tasks...');
+            }
+        });
+        
+        // Initial render
+        render();
+        
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => {});
+        }
+    </script>
+</body>
+</html>
