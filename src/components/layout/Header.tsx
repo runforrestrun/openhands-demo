@@ -2,14 +2,15 @@
 
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, User, Settings, LogOut, Sun, Moon, Trash2, Mail, Check } from 'lucide-react';
+import { Bell, User, Settings, LogOut, Sun, Moon, Mail, Check } from 'lucide-react';
 import { useAppStore } from '@/store/useAppStore';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/utils';
+import { format } from 'date-fns';
 
 export function Header() {
-  const { theme, setTheme, notifications, markNotificationRead, setHighlightedTaskId, highlightedTaskId, setSelectedQuadrant } = useAppStore();
+  const { theme, setTheme, notifications, markNotificationRead, setHighlightedTaskId, highlightedTaskId, setSelectedQuadrant, logout } = useAppStore();
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showProfile, setShowProfile] = React.useState(false);
 
@@ -21,7 +22,6 @@ export function Header() {
     setSelectedQuadrant(null);
     setShowNotifications(false);
     
-    // Clear highlight after 3 seconds
     setTimeout(() => {
       setHighlightedTaskId(null);
     }, 3000);
@@ -38,9 +38,9 @@ export function Header() {
   const getThemeIcon = () => {
     switch (theme) {
       case 'light': return <Sun className="h-5 w-5" />;
-      case 'forrest': return <span className="text-xl">🌲</span>;
-      case 'sea': return <span className="text-xl">🌊</span>;
-      case 'sunset': return <span className="text-xl">🌅</span>;
+      case 'forrest': return <span className="text-lg">🌲</span>;
+      case 'sea': return <span className="text-lg">🌊</span>;
+      case 'sunset': return <span className="text-lg">🌅</span>;
       default: return <Moon className="h-5 w-5" />;
     }
   };
@@ -56,7 +56,7 @@ export function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-full items-center justify-between px-4">
+      <div className="flex h-full items-center justify-between px-4 md:px-6">
         {/* Logo */}
         <div className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
@@ -66,11 +66,11 @@ export function Header() {
               <circle cx="12" cy="12" r="2" fill="currentColor"/>
             </svg>
           </div>
-          <span className="font-heading text-xl font-bold text-foreground">Compass</span>
+          <span className="font-heading text-xl font-bold">Compass</span>
         </div>
 
         {/* Right side controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {/* Theme Toggle */}
           <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-10 w-10 rounded-full">
             {getThemeIcon()}
@@ -84,12 +84,12 @@ export function Header() {
               onClick={() => setShowNotifications(!showNotifications)}
               className={cn(
                 'h-10 w-10 rounded-full relative',
-                showNotifications && 'bg-surface'
+                showNotifications && 'bg-muted'
               )}
             >
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                <span className="absolute -right-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
                   {unreadCount}
                 </span>
               )}
@@ -101,7 +101,7 @@ export function Header() {
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-auto rounded-lg border border-border bg-surface p-2 shadow-lg"
+                  className="absolute right-0 top-full mt-2 w-80 max-h-96 overflow-auto rounded-lg border border-border bg-card p-2 shadow-md"
                 >
                   <div className="mb-2 px-2 py-1">
                     <h3 className="font-heading text-sm font-semibold">Notifications</h3>
@@ -111,8 +111,8 @@ export function Header() {
                       key={notification.id}
                       onClick={() => handleNotificationClick(notification.id, notification.taskId)}
                       className={cn(
-                        'flex w-full items-start gap-3 rounded-md p-2 text-left transition-colors hover:bg-background',
-                        !notification.read && 'bg-background/50'
+                        'flex w-full items-start gap-3 rounded-md p-2 text-left transition-colors hover:bg-muted',
+                        !notification.read && 'bg-muted/50'
                       )}
                     >
                       <div className={cn(
@@ -130,10 +130,10 @@ export function Header() {
                         )}>
                           {notification.title}
                         </p>
-                        <p className="truncate text-xs text-foreground-secondary">
+                        <p className="truncate text-xs text-muted-foreground">
                           {notification.message}
                         </p>
-                        <p className="mt-1 text-xs text-foreground-secondary">
+                        <p className="mt-1 text-xs text-muted-foreground">
                           {formatDate(notification.sentAt, 'time')}
                         </p>
                       </div>
@@ -152,7 +152,7 @@ export function Header() {
               onClick={() => setShowProfile(!showProfile)}
               className={cn(
                 'h-10 w-10 rounded-full',
-                showProfile && 'bg-surface'
+                showProfile && 'bg-muted'
               )}
             >
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
@@ -166,13 +166,13 @@ export function Header() {
                   initial={{ opacity: 0, y: 10, scale: 0.95 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  className="absolute right-0 top-full mt-2 w-48 rounded-lg border border-border bg-surface p-1 shadow-lg"
+                  className="absolute right-0 top-full mt-2 w-48 rounded-lg border border-border bg-card p-1 shadow-md"
                 >
-                  <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-background">
+                  <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted">
                     <Settings className="h-4 w-4" />
                     <span>Settings</span>
                   </button>
-                  <button className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-background">
+                  <button onClick={logout} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted text-destructive">
                     <LogOut className="h-4 w-4" />
                     <span>Logout</span>
                   </button>
